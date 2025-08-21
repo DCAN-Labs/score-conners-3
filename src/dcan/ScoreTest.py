@@ -1,7 +1,12 @@
 import unittest
 import pandas as pd
+import sys
+import os
 
-from dcan.Score import do_total_scoring, get_t_score_from_raw_score
+# Add the project root to Python path when running directly
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+from src.dcan.Score import do_total_scoring, get_t_score_from_raw_score
 
 
 class ScoreTest(unittest.TestCase):
