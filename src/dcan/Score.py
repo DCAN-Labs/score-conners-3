@@ -22,11 +22,11 @@ def do_total_scoring(parents_score_file, age, sex, parents_or_teacher):
 
 
 def get_area_scores(question_number, scores_df, lookup_df):
-    score = scores_df.iloc[0][question_number]
-    looked_up_score = lookup_df.iloc[question_number][score + 1]
+    score = scores_df.iloc[0, question_number]
+    looked_up_score = lookup_df.iloc[question_number, score + 1]
     area_name_to_score = {}
     for area_col in range(AREA_COL_START, AREA_COL_END):
-        area = lookup_df.iloc[question_number][area_col]
+        area = lookup_df.iloc[question_number, area_col]
         if area:
             area_name_to_score[area] = looked_up_score
 
@@ -77,7 +77,7 @@ def get_t_score(age, gender, column_name_to_score, parents_or_teacher):
                 index = contains_multiple_raw_scores(scores_df)
             raw_score = column_name_to_score[key]
             t_score = get_t_score_from_raw_score(raw_score, scores_df)
-            result[key] = (raw_score, t_score)
+            result[key] = (int(raw_score), int(t_score))
         else:
             raw_score = column_name_to_score[key]
             result[key] = raw_score
@@ -105,7 +105,6 @@ def contains_multiple_raw_scores(df):
         if isinstance(raw_score, str) and '-' in raw_score:
             return index
     return None
-
 
 def get_t_score_from_raw_score(raw_score, scores_df):
     row = None
