@@ -136,3 +136,16 @@ src/tables/MaleProfile_Ages_6_11_IN.pdf
 node_modules/
 package-lock.json
 package.json
+data/box_constant/CONNERS-3/female_ag.csv
+data/box_constant/CONNERS-3/female_ef.csv
+data/box_constant/CONNERS-3/female_hy.csv
+data/box_constant/CONNERS-3/female_lp.csv
+data/box_constant/CONNERS-3/female_pr.csv
+data/box_constant/CONNERS-3/male_ag.csv
+data/box_constant/CONNERS-3/male_ef.csv
+data/box_constant/CONNERS-3/male_hy.csv
+data/box_constant/CONNERS-3/male_in.csv
+data/box_constant/CONNERS-3/male_lp.csv
+data/box_constant/CONNERS-3/male_pr.csv
+diff.txt
+data/constant/parent/.~lock.female_ef.csv#
