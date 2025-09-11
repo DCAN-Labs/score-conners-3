@@ -132,3 +132,7 @@ src/tables/Doc Jul 25, 2025, 14.44.pdf
 src/tables/MaleProfile_Ages_6_11_IN.pdf
 .vscode/launch.json
 .vscode/settings.json
+
+node_modules/
+package-lock.json
+package.json
