@@ -50,7 +50,7 @@ class TestCSVValidation(unittest.TestCase):
                 return True
         
         # Test with the actual CSV file
-        csv_file = "/users/9/reine097/projects/score-conners-3/data/constant/parent/female_in.csv"
+        csv_file = "/data/constant/parent/female_in.csv"
         self.assertTrue(validate_csv_columns(csv_file))
     
     def test_csv_validation_with_inconsistent_columns(self):
@@ -181,8 +181,8 @@ class TestCSVValidation(unittest.TestCase):
             return violations
         
         # Check both files for violations
-        female_in_file = "/users/9/reine097/projects/score-conners-3/data/constant/parent/female_in.csv"
-        female_ag_file = "/users/9/reine097/projects/score-conners-3/data/constant/parent/female_ag.csv"
+        female_in_file = "/data/constant/parent/female_in.csv"
+        female_ag_file = "/data/constant/parent/female_ag.csv"
         
         print(f"\n=== Violations in female_in.csv ===")
         in_violations = find_trend_violations(female_in_file)

@@ -70,9 +70,9 @@ class ScoreTest(unittest.TestCase):
         df = pd.read_csv(csv_file)
         age = 9
         age_str = str(age)
-        column_0_name = 'Unnamed: 0'
+        column_0_name = 'T'
         age_column = df[[column_0_name, age_str]]
-        scores_df = age_column.rename(columns={"Unnamed: 0": "t-score", age_str: "raw score"})
+        scores_df = age_column.rename(columns={"T": "t-score", age_str: "raw score"})
         t_score = get_t_score_from_raw_score(raw_score, scores_df)
         self.assertEqual(90, t_score)
 
@@ -82,9 +82,9 @@ class ScoreTest(unittest.TestCase):
         df = pd.read_csv(csv_file)
         age = 9
         age_str = str(age)
-        column_0_name = 'Unnamed: 0'
+        column_0_name = 'T'
         age_column = df[[column_0_name, age_str]]
-        scores_df = age_column.rename(columns={"Unnamed: 0": "t-score", age_str: "raw score"})
+        scores_df = age_column.rename(columns={"T": "t-score", age_str: "raw score"})
         t_score = get_t_score_from_raw_score(raw_score, scores_df)
         self.assertEqual(40, t_score)
 

@@ -68,9 +68,9 @@ def get_t_score(age, gender, column_name_to_score, parents_or_teacher):
                 continue
             df = pd.read_csv(csv_file)
             age_str = str(age)
-            column_0_name = 'Unnamed: 0'
+            column_0_name = 'T'
             age_column = df[[column_0_name, age_str]]
-            scores_df = age_column.rename(columns={"Unnamed: 0": "t-score", age_str: "raw score"})
+            scores_df = age_column.rename(columns={"T": "t-score", age_str: "raw score"})
             index = contains_multiple_raw_scores(scores_df)
             while index:
                 scores_df = split_multiple_raw_score(scores_df, index)
