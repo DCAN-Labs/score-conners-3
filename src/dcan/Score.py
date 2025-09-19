@@ -1,6 +1,9 @@
 import math
 from collections import Counter
 from os.path import exists
+from datetime import datetime
+import tempfile
+import os
 
 import pandas as pd
 from pandas import DataFrame, concat
@@ -13,7 +16,6 @@ QUESTION_OFFSET = 4
 
 
 def do_total_scoring(parents_score_file, age, sex, parents_or_teacher):
-    # TODO Implement using teacher_score_file
     lookup_table_file = f"data/constant/scoringsheet_conners3{parents_or_teacher}.csv"
     column_name_to_score = do_scoring(parents_score_file, lookup_table_file)
     t_score = get_t_score(age, sex, column_name_to_score, parents_or_teacher)
@@ -69,6 +71,9 @@ def get_t_score(age, gender, column_name_to_score, parents_or_teacher):
             df = pd.read_csv(csv_file)
             age_str = str(age)
             column_0_name = 'T'
+            if age_str not in df.columns:
+                print(f"Warning: Age {age} not supported for area {key}")
+                continue
             age_column = df[[column_0_name, age_str]]
             scores_df = age_column.rename(columns={"T": "t-score", age_str: "raw score"})
             index = contains_multiple_raw_scores(scores_df)
@@ -88,11 +93,19 @@ def get_t_score(age, gender, column_name_to_score, parents_or_teacher):
 def split_multiple_raw_score(df, index):
     row = df.iloc[index]
     raw_score_str = row['raw score']
-    lower_raw_score, upper_raw_score = raw_score_str.split('-')
-    assert int(upper_raw_score) - int(lower_raw_score) == 1
+    parts = raw_score_str.split('-')
+    if len(parts) != 2:
+        return df
+    lower_raw_score, upper_raw_score = parts
+    try:
+        lower_val = int(lower_raw_score)
+        upper_val = int(upper_raw_score)
+    except ValueError:
+        return df
+    
     t_score = row['t-score']
-    lower_line = DataFrame({"t-score": int(t_score), "raw score": int(lower_raw_score)}, index=[index + 1])
-    upper_line = DataFrame({"t-score": int(t_score), "raw score": int(upper_raw_score)}, index=[index])
+    lower_line = DataFrame({"t-score": int(t_score), "raw score": lower_val}, index=[index + 1])
+    upper_line = DataFrame({"t-score": int(t_score), "raw score": upper_val}, index=[index])
     df2 = concat([df.iloc[:index], upper_line, lower_line, df.iloc[index + 1:]]).reset_index(drop=True)
 
     return df2
@@ -121,3 +134,103 @@ def get_t_score_from_raw_score(raw_score, scores_df):
     else:
         t_score = 40
     return t_score
+
+
+def calculate_age_from_dob(dob_str, assessment_date=None):
+    if assessment_date is None:
+        assessment_date = datetime.now()
+    elif isinstance(assessment_date, str):
+        assessment_date = datetime.strptime(assessment_date, '%m/%d/%y')
+    
+    dob = datetime.strptime(dob_str, '%m/%d/%y')
+    age = assessment_date.year - dob.year
+    if (assessment_date.month, assessment_date.day) < (dob.month, dob.day):
+        age -= 1
+    return age
+
+
+def process_batch_scores(input_csv_path, sex, parents_or_teacher='parent', assessment_date=None, output_csv_path=None):
+    df = pd.read_csv(input_csv_path)
+    results = []
+    
+    for index, row in df.iterrows():
+        record_id = row['record_id']
+        dob = row['con3_p_dob']
+        
+        if pd.isna(dob):
+            print(f"Warning: Skipping record {record_id} - missing date of birth")
+            continue
+            
+        age = calculate_age_from_dob(dob, assessment_date)
+        
+        question_responses = row.iloc[5:115]
+        question_responses = question_responses.fillna(0)
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as temp_file:
+            temp_df = pd.DataFrame([question_responses.values])
+            temp_df.to_csv(temp_file.name, index=False, header=False)
+            temp_file_path = temp_file.name
+        
+        try:
+            t_scores = do_total_scoring(temp_file_path, age, sex, parents_or_teacher)
+            
+            result_row = {
+                'record_id': record_id,
+                'age': age,
+                'sex': sex,
+                'dob': dob
+            }
+            
+            for area, scores in t_scores.items():
+                if isinstance(scores, tuple):
+                    result_row[f'{area}_raw'] = scores[0]
+                    result_row[f'{area}_t'] = scores[1]
+                else:
+                    result_row[f'{area}_raw'] = scores
+                    
+            results.append(result_row)
+            
+        except Exception as e:
+            print(f"Error processing record {record_id}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            
+        finally:
+            os.unlink(temp_file_path)
+    
+    results_df = pd.DataFrame(results)
+    
+    if output_csv_path:
+        results_df.to_csv(output_csv_path, index=False)
+        print(f"Results saved to {output_csv_path}")
+    
+    return results_df
+
+
+def main():
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Process Conners-3 scores for multiple subjects')
+    parser.add_argument('input_csv', help='Path to input CSV file with subject data')
+    parser.add_argument('sex', choices=['male', 'female'], help='Sex of subjects (all subjects must be same sex)')
+    parser.add_argument('--parents_or_teacher', choices=['parent', 'teacher'], default='parent',
+                        help='Type of assessment (default: parent)')
+    parser.add_argument('--assessment_date', help='Assessment date in MM/DD/YY format (default: current date)')
+    parser.add_argument('--output', help='Output CSV file path (default: print to stdout)')
+    
+    args = parser.parse_args()
+    
+    results_df = process_batch_scores(
+        args.input_csv, 
+        args.sex, 
+        args.parents_or_teacher,
+        args.assessment_date,
+        args.output
+    )
+    
+    if not args.output:
+        print(results_df.to_csv(index=False))
+
+
+if __name__ == '__main__':
+    main()
